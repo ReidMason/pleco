@@ -39,6 +39,7 @@ func (m Model) executeAction(idx int) (Model, tea.Cmd) {
 
 		m.logs += fmt.Sprintf("Total files: %d\nCommon filetypes:\n%s\n\n", summary.Filecount, commonFiles)
 		m.viewport.SetContent(m.logs)
+		m.viewport.GotoBottom()
 	case 1:
 		return m, tea.Quit
 	}
@@ -73,6 +74,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.Height = msg.Height
 		}
 	}
+
+	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
@@ -122,7 +126,7 @@ func main() {
 		logs:        "",
 	}
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
