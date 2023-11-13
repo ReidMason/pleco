@@ -74,7 +74,7 @@ func (m Model) Render() string {
 		if i == m.index {
 			line = lipgloss.NewStyle().
 				Background(lipgloss.Color(colours.Lavender)).
-				Foreground(lipgloss.Color(colours.Surface0)).
+				Foreground(lipgloss.Color(colours.Crust)).
 				Render(line)
 		}
 		options += line + "\n"

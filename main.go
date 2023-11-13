@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ReidMason/pleco/internal/colours"
 	filehandler "github.com/ReidMason/pleco/internal/file_handler"
 	"github.com/ReidMason/pleco/internal/list"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -81,13 +82,36 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) View() string {
-	title := fmt.Sprintf("Pleco\nSelected directory: '%s'", m.selectedDir)
-	options := m.list.Render()
-	output := lipgloss.JoinVertical(lipgloss.Left, title, options)
+var BorderStyle = lipgloss.
+	NewStyle().
+	Border(lipgloss.RoundedBorder()).
+	BorderForeground(lipgloss.Color(colours.Blue))
 
-	logs := m.viewport.View()
-	output = lipgloss.JoinVertical(lipgloss.Top, output, logs)
+var HeaderStyle = lipgloss.
+	NewStyle().
+	Background(lipgloss.Color(colours.Flamingo)).
+	Foreground(lipgloss.Color(colours.Crust)).
+	Align(lipgloss.Center)
+
+func (m Model) View() string {
+	title := HeaderStyle.Copy().
+		Background(lipgloss.Color(colours.Mauve)).
+		Width(m.viewport.Width).
+		Render("Pleco")
+
+	directoryInfo := fmt.Sprintf("\nSelected directory: '%s'\n", m.selectedDir)
+	options := "Options:" + m.list.Render()
+	output := lipgloss.JoinVertical(lipgloss.Left, title, directoryInfo, options)
+
+	logsTitle := HeaderStyle.
+		Width(m.viewport.Width).
+		Render("Logs")
+
+	logs := BorderStyle.
+		Width(m.viewport.Width - BorderStyle.GetHorizontalBorderSize()).
+		Render(m.viewport.View())
+
+	output = lipgloss.JoinVertical(lipgloss.Top, output, logsTitle, logs)
 
 	return output
 }
