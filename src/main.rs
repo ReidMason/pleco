@@ -12,7 +12,19 @@ fn main() {
 
     match args.command {
         Command::ListCommon(x) => list_common(&x.filepath),
+        Command::Count(x) => count(&x.filepath, &x.search),
     }
+}
+
+fn count(filepath: &str, search: &str) {
+    let paths = glob(&format!("{}/**/{}", filepath, search)).unwrap();
+
+    println!(
+        "Found {} occurances of '{}' in '{}'",
+        paths.count(),
+        search,
+        filepath
+    );
 }
 
 fn list_common(filepath: &str) {
@@ -20,7 +32,6 @@ fn list_common(filepath: &str) {
 
     let mut file_types: HashMap<String, usize> = HashMap::new();
 
-    // Count the number of files of each type
     for path in paths {
         let path = path.unwrap();
         let extension = match path.extension() {
