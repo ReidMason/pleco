@@ -32,12 +32,10 @@ fn list_common(filepath: &str) {
         *count += 1;
     }
 
-    println!("File types found:");
-    // Order by count
+    println!("Common file types found:");
     let mut file_types: Vec<_> = file_types.into_iter().collect();
     file_types.sort_by(|a, b| b.1.cmp(&a.1));
 
-    // Print top 5 file types
     for (file_type, count) in file_types.iter().take(5) {
         println!("  {}: {}", file_type, count);
     }
