@@ -4,27 +4,31 @@ use std::collections::HashMap;
 
 use args::{Command, PlecoArgs};
 use clap::Parser;
+
 extern crate glob;
-use self::glob::glob;
+use glob::glob;
 
 fn main() {
     let args = PlecoArgs::parse();
 
     match args.command {
         Command::ListCommon(x) => list_common(&x.filepath),
-        Command::Count(x) => count(&x.filepath, &x.search),
-    }
+        Command::Count(x) => {
+            count(&x.filepath, &x.search);
+        }
+    };
 }
 
-fn count(filepath: &str, search: &str) {
+fn count(filepath: &str, search: &str) -> usize {
     let paths = glob(&format!("{}/**/{}", filepath, search)).unwrap();
 
+    let path_count = paths.count();
     println!(
         "Found {} occurances of '{}' in '{}'",
-        paths.count(),
-        search,
-        filepath
+        path_count, search, filepath
     );
+
+    return path_count;
 }
 
 fn list_common(filepath: &str) {
@@ -49,5 +53,37 @@ fn list_common(filepath: &str) {
 
     for (file_type, count) in file_types.iter().take(5) {
         println!("  {}: {}", file_type, count);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs::File;
+
+    use tempfile::tempdir;
+
+    use super::*;
+
+    #[test]
+    fn test_count() {
+        let dir = tempdir().unwrap();
+
+        let test_files = vec![
+            "test_dir/test_file1.txt",
+            "test_dir/test_file2.rs",
+            "test_dir/nested/test_file2.rs",
+        ];
+
+        let test_dir = dir.path().to_str().unwrap();
+        for path in test_files.iter() {
+            let file_path = dir.path().join(path);
+            let prefix = file_path.parent().unwrap();
+            std::fs::create_dir_all(prefix).unwrap();
+            File::create(file_path).unwrap();
+        }
+
+        println!("test_dir: {}", test_dir);
+        let result = count(test_dir, "test_file2.rs");
+        assert_eq!(result, 2);
     }
 }
