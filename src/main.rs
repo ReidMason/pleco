@@ -15,23 +15,31 @@ fn main() {
     match args.command {
         Command::ListCommon(x) => {
             let file_types = get_common_filetypes(&x.filepath);
+            let file_types = order_file_types(file_types);
+            let file_types = format_file_types(file_types);
 
             println!("Common file types found:");
-            let mut file_types_vec: Vec<(String, usize)> = file_types.into_iter().collect();
-            file_types_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
-            let output = file_types_vec
-                .into_iter()
-                .map(|(file_type, count)| format!("{}\t{}", file_type, count))
-                .collect::<Vec<String>>()
-                .join("\n");
-
-            print_columns(&output);
+            print_columns(&file_types);
         }
         Command::Count(x) => {
             count(&x.filepath, &x.search);
         }
     };
+}
+
+fn format_file_types(file_types: Vec<(String, usize)>) -> String {
+    file_types
+        .into_iter()
+        .map(|(file_type, count)| format!("{}\t{}", file_type, count))
+        .collect::<Vec<String>>()
+        .join("\n")
+}
+
+fn order_file_types(file_types: HashMap<String, usize>) -> Vec<(String, usize)> {
+    let mut file_types_vec: Vec<(String, usize)> = file_types.into_iter().collect();
+    file_types_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    return file_types_vec;
 }
 
 fn print_columns(output: &str) {
