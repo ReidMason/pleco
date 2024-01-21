@@ -12,7 +12,17 @@ fn main() {
     let args = PlecoArgs::parse();
 
     match args.command {
-        Command::ListCommon(x) => list_common(&x.filepath),
+        Command::ListCommon(x) => {
+            let file_types = get_common_filetypes(&x.filepath);
+
+            println!("Common file types found:");
+            let mut file_types_vec: Vec<_> = file_types.into_iter().collect();
+            file_types_vec.sort_by(|a, b| b.1.cmp(&a.1));
+
+            for (file_type, count) in file_types_vec.iter().take(5) {
+                println!("  {}: {}", file_type, count);
+            }
+        }
         Command::Count(x) => {
             count(&x.filepath, &x.search);
         }
@@ -31,13 +41,21 @@ fn count(filepath: &str, search: &str) -> usize {
     return path_count;
 }
 
-fn list_common(filepath: &str) {
+fn get_common_filetypes(filepath: &str) -> HashMap<String, usize> {
     let paths = glob(&format!("{}/**/*", filepath)).unwrap();
 
     let mut file_types: HashMap<String, usize> = HashMap::new();
 
     for path in paths {
-        let path = path.unwrap();
+        let path = match path {
+            Ok(x) => x,
+            Err(_) => continue,
+        };
+
+        if path.is_dir() {
+            continue;
+        }
+
         let extension = match path.extension() {
             Some(ext) => ext.to_str().unwrap().to_string(),
             None => String::from("Unknown"),
@@ -47,13 +65,7 @@ fn list_common(filepath: &str) {
         *count += 1;
     }
 
-    println!("Common file types found:");
-    let mut file_types: Vec<_> = file_types.into_iter().collect();
-    file_types.sort_by(|a, b| b.1.cmp(&a.1));
-
-    for (file_type, count) in file_types.iter().take(5) {
-        println!("  {}: {}", file_type, count);
-    }
+    return file_types;
 }
 
 #[cfg(test)]
@@ -82,8 +94,32 @@ mod tests {
             File::create(file_path).unwrap();
         }
 
-        println!("test_dir: {}", test_dir);
         let result = count(test_dir, "test_file2.rs");
         assert_eq!(result, 2);
+    }
+
+    #[test]
+    fn test_common() {
+        let dir = tempdir().unwrap();
+
+        let test_files = vec![
+            "test_dir/test_file1.txt",
+            "test_dir/test_file2.rs",
+            "test_dir/nested/test_file2.rs",
+        ];
+
+        let test_dir = dir.path().to_str().unwrap();
+        for path in test_files.iter() {
+            let file_path = dir.path().join(path);
+            let prefix = file_path.parent().unwrap();
+            std::fs::create_dir_all(prefix).unwrap();
+            File::create(file_path).unwrap();
+        }
+
+        let result = get_common_filetypes(test_dir);
+
+        assert_eq!(result.values().count(), 2);
+        assert_eq!(result.get("txt").unwrap(), &1);
+        assert_eq!(result.get("rs").unwrap(), &2);
     }
 }
