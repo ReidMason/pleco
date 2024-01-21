@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.16", features = ["derive"] }
 glob = "0.3.1"
+tabwriter = "1.4.0"
 
 [dev-dependencies]
 tempfile = "3.9.0"

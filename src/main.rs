@@ -1,12 +1,13 @@
 mod args;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Write};
 
 use args::{Command, PlecoArgs};
 use clap::Parser;
 
 extern crate glob;
 use glob::glob;
+use tabwriter::TabWriter;
 
 fn main() {
     let args = PlecoArgs::parse();
@@ -19,14 +20,25 @@ fn main() {
             let mut file_types_vec: Vec<_> = file_types.into_iter().collect();
             file_types_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
+            let mut output = String::from("");
             for (file_type, count) in file_types_vec.iter().take(5) {
-                println!("  {}: {}", file_type, count);
+                output += &String::from(format!("{}\t{}\n", file_type, count));
             }
+            print_columns(&output);
         }
         Command::Count(x) => {
             count(&x.filepath, &x.search);
         }
     };
+}
+
+fn print_columns(output: &str) {
+    let mut tw = TabWriter::new(vec![]);
+    tw.write_all(output.as_bytes()).unwrap();
+    tw.flush().unwrap();
+
+    let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
+    println!("{}", written);
 }
 
 fn count(filepath: &str, search: &str) -> usize {
