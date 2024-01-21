@@ -13,6 +13,19 @@ pub enum Command {
     ListCommon(ListCommonFiles),
     // Count occurances
     Count(Count),
+    // Pull files
+    PullFiles(PullFiles),
+}
+
+#[derive(Debug, Args)]
+pub struct PullFiles {
+    // Filepath to the first directory
+    #[clap(default_value("."))]
+    pub filepath: String,
+
+    // Output directory
+    #[clap(default_value("./output"))]
+    pub output_dir: String,
 }
 
 #[derive(Debug, Args)]
