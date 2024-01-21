@@ -17,13 +17,15 @@ fn main() {
             let file_types = get_common_filetypes(&x.filepath);
 
             println!("Common file types found:");
-            let mut file_types_vec: Vec<_> = file_types.into_iter().collect();
+            let mut file_types_vec: Vec<(String, usize)> = file_types.into_iter().collect();
             file_types_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
-            let mut output = String::from("");
-            for (file_type, count) in file_types_vec.iter().take(5) {
-                output += &String::from(format!("{}\t{}\n", file_type, count));
-            }
+            let output = file_types_vec
+                .into_iter()
+                .map(|(file_type, count)| format!("{}\t{}", file_type, count))
+                .collect::<Vec<String>>()
+                .join("\n");
+
             print_columns(&output);
         }
         Command::Count(x) => {
