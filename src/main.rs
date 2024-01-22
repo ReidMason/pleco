@@ -2,7 +2,9 @@ mod args;
 
 use std::{
     collections::HashMap,
+    ffi::OsStr,
     io::Write,
+    panic::PanicInfo,
     path::{Path, PathBuf},
 };
 
@@ -70,28 +72,44 @@ fn pull_files(filepath: &str, output_dir: &str) {
         }
 
         let new_filepath = get_new_filepath(&path, output_dir);
-        std::fs::create_dir_all(new_filepath.parent().unwrap()).unwrap();
-        std::fs::copy(&path, &new_filepath).unwrap();
+        if let Some(new_filepath) = new_filepath {
+            match copy_file(&path, new_filepath) {
+                Ok(_) => {}
+                Err(_) => {
+                    println!("Failed to copy file: {:?}", path)
+                }
+            }
+        }
     }
 }
 
-fn get_new_filepath(path: &PathBuf, output_dir: &str) -> PathBuf {
-    let base = Path::new(output_dir);
-    let new_filepath = match path.parent() {
-        Some(parent) => match parent.file_name() {
-            Some(parent_filename) => match parent.parent() {
-                Some(gp) => match gp.file_name() {
-                    Some(gp_filename) => base.join(gp_filename).join(parent_filename),
-                    None => base.join(parent_filename),
-                },
-                None => base.join("root"),
-            },
-            None => base.join("root"),
-        },
-        None => base.join("root"),
-    };
+fn copy_file(original_filepath: &PathBuf, new_filepath: PathBuf) -> std::io::Result<()> {
+    if let Some(parent) = new_filepath.parent() {
+        std::fs::create_dir_all(parent)?;
+        std::fs::copy(original_filepath, new_filepath)?;
+    }
+    Ok(())
+}
 
-    return new_filepath.join(path.file_name().unwrap());
+fn get_new_filepath(path: &PathBuf, output_dir: &str) -> Option<PathBuf> {
+    let base = Path::new(output_dir);
+    let grandparent_filename = path
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::file_name)
+        .unwrap_or(OsStr::new(""));
+    let parent_filename = path
+        .parent()
+        .and_then(Path::file_name)
+        .unwrap_or(OsStr::new("root"));
+
+    let filename = path.file_name()?;
+
+    Some(
+        base.join(grandparent_filename)
+            .join(parent_filename)
+            .join(filename),
+    )
 }
 
 fn format_file_types(file_types: Vec<(String, usize)>) -> String {
@@ -232,7 +250,7 @@ mod tests {
             let path = Path::new(tc.0).to_path_buf();
             let result = get_new_filepath(&path, output_dir);
 
-            assert_eq!(result.to_str().unwrap(), tc.1);
+            assert_eq!(result.unwrap().to_str().unwrap(), tc.1);
         }
     }
 
