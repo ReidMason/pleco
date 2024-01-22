@@ -4,7 +4,6 @@ use std::{
     collections::HashMap,
     ffi::OsStr,
     io::Write,
-    panic::PanicInfo,
     path::{Path, PathBuf},
 };
 
