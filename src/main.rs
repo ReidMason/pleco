@@ -281,4 +281,47 @@ mod tests {
 
         // pull_files(test_dir);
     }
+
+    #[test]
+    fn test_order_file_types() {
+        let mut file_types = HashMap::new();
+        file_types.insert("txt".to_string(), 5);
+        file_types.insert("rs".to_string(), 10);
+        file_types.insert("py".to_string(), 7);
+
+        let ordered_file_types = order_file_types(file_types);
+
+        assert_eq!(
+            ordered_file_types,
+            vec![
+                ("rs".to_string(), 10),
+                ("py".to_string(), 7),
+                ("txt".to_string(), 5),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_copy_file() -> std::io::Result<()> {
+        // Create a temporary directory
+        let dir = tempdir()?;
+
+        // Create a file in the temporary directory
+        let original_filepath = dir.path().join("original.txt");
+        let mut file = File::create(&original_filepath)?;
+        writeln!(file, "Hello, world!")?;
+
+        // Copy the file to a new location
+        let new_filepath = dir.path().join("subdir").join("copied.txt");
+        copy_file(&original_filepath, new_filepath.clone())?;
+
+        // Check that the copied file exists and has the same contents as the original file
+        assert!(Path::new(&new_filepath).exists());
+        assert_eq!(
+            std::fs::read(&original_filepath)?,
+            std::fs::read(&new_filepath)?
+        );
+
+        Ok(())
+    }
 }
