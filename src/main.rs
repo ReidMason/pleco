@@ -324,4 +324,17 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_format_file_types() {
+        let file_types = vec![
+            ("txt".to_string(), 5),
+            ("rs".to_string(), 10),
+            ("py".to_string(), 7),
+        ];
+
+        let formatted_file_types = format_file_types(file_types);
+
+        assert_eq!(formatted_file_types, "txt\t5\nrs\t10\npy\t7");
+    }
 }
